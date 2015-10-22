@@ -66,6 +66,80 @@ whitelist = [{'net': IPNetwork('10.0.0.0/8'), 'org': 'Private per RFC 1918'},
 
 useragent = 'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
 
+# this can be set once and used throughout the script
+# instead of being set every time it's needed
+vt_api = ''
+
+
+def extract_ipv4(data):
+    """ Extract all ipv4 addresses in chunk of data """
+    ipv4 = re.findall(re_ipv4, data)
+    if ipv4 is not None and len(ipv4) > 0:
+        return ipv4
+
+
+def extract_ipv6(data):
+    """ Extract all ipv6 addresses in chunk of data """
+    ipv6 = re.findall(re_ipv6, data)
+    if ipv6 is not None and len(ipv6) > 0:
+        return ipv6
+
+
+def extract_emails(data):
+    """ Extract all email addresses in chunk of data """
+    emails = re.findall(re_email, data)
+    if emails is not None and len(emails) > 0:
+        return emails
+    return None
+
+
+def extract_urls(data):
+    """ Extract all URLs in chunk of data """
+    urls = re.findall(re_url, data)
+    if urls is not None and len(urls) > 0:
+        return urls
+    return None
+
+
+def get_hashes(file_name):
+    """ Return dictionary of md5, sha1, and sha256 hash for file """
+    _hash = {}
+    fin = open(file_name, 'rb')
+    m, s = hashlib.md5(), hashlib.sha1()
+    s2, s5 = hashlib.sha256(), hashlib.sha512()
+    while True:
+        data = find.read(16384)
+        if not data:
+            break
+        m.update(data)
+        s.update(data)
+        s2.update(data)
+        s5.update(data)
+
+    _hash['md5'] = m.hexdigest()
+    _hash['sha1'] = s.hexdigest()
+    _hash['sha256'] = s2.hexdigest()
+    _hash['sha512'] = s5.hexdigest()
+    return _hash
+
+
+def is_valid_file(file_path):
+    """ Ensure file exists, is not a directory, has a size greater than zero,
+    and the user has proper permissions to access it """
+    if os.path.exists(file_path) and os.path.isfile(file_path) \
+            and os.path.getsize(file_path) > 0 and os.access(file_path, os.R_OK):
+        return True
+    return False
+
+
+def get_filetype(file_path):
+    """ Determine file type """
+    _type = None
+    output = commands.getoutput('file -b %s' % file_path)
+    if output is not None and output != '':
+        _type = output.strip()
+    return _type
+
 
 def ip_to_long(ip):
     """Convert an IPv4Address string to long"""
@@ -281,7 +355,7 @@ def reverse_dns(ipaddress):
     return [str(name)]
 
 
-def vt_ip_check(ip, vt_api):
+def vt_ip_check(ip):
     """Checks VirusTotal for occurrences of an IP address"""
     if not is_IPv4Address(ip):
         return None
@@ -295,7 +369,7 @@ def vt_ip_check(ip, vt_api):
         return None
 
 
-def vt_name_check(domain, vt_api):
+def vt_name_check(domain):
     """Checks VirusTotal for occurrences of a domain name"""
     if not is_fqdn(domain):
         return None
@@ -309,7 +383,7 @@ def vt_name_check(domain, vt_api):
         return None
 
 
-def vt_hash_check(fhash, vt_api):
+def vt_hash_check(fhash):
     """Checks VirusTotal for occurrences of a file hash"""
     if not is_hash(fhash):
         return None
