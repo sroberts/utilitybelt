@@ -87,7 +87,7 @@ def extract_ipv6(data):
 
 def extract_emails(data):
     """ Extract all email addresses in chunk of data """
-    emails = re.findall(re_email, data):
+    emails = re.findall(re_email, data)
     if emails is not None and len(emails) > 0:
         return emails
     return None
