@@ -95,7 +95,7 @@ def extract_emails(data):
 
 def extract_urls(data):
     """ Extract all URLs in chunk of data """
-    urls = re.findall(re_url, data):
+    urls = re.findall(re_url, data)
     if urls is not None and len(urls) > 0:
         return urls
     return None
