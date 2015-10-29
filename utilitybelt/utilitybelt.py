@@ -275,10 +275,18 @@ def reverse_dns_sna(ipaddress):
 
 
 def reverse_dns(ipaddress):
-    """Returns a list of the dns names that point to a given ipaddress"""
+    """Returns a list of the dns names that point to a given ipaddress.
+       An empty list will be returned for IP addresses without a PTR record,
+       or invalid IP addresses that throw a socket.gaierror exception."""
 
-    name = socket.gethostbyaddr(ipaddress)[0]
-    return [str(name)]
+    try:
+        name = socket.gethostbyaddr(ipaddress)[0]
+        hosts = [str(name)]
+
+    except (socket.herror, socket.gaierror):
+        hosts = []
+
+    return hosts
 
 
 def vt_ip_check(ip, vt_api):
